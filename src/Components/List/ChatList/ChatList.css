@@ -1,0 +1,21 @@
+.searchBar{
+    flex:1;
+    background-color: rgba(17,25,40,0.5);
+}
+
+.add{
+    height: 36px;
+    width:36px;
+    background-color: rgba(17,25,40,0.5);
+}
+
+.item{
+    border-bottom: 1px solid #dddddd35;
+    img{
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        object-fit: cover;
+    }
+
+}
