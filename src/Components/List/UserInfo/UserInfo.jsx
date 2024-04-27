@@ -3,7 +3,7 @@ import './UserInfo.css'
 function UserInfo() {
   return (
     <div className='userInfo flex items-center p-5 justify-between'>
-        <div className='user flex items-center gap-5'>
+        <div className='userDetail flex items-center gap-5'>
             <img src="./avatar.png" alt=""/>
             <h2>Fardaan Mahdi</h2>
         </div>
