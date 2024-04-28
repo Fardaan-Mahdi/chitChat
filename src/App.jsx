@@ -6,7 +6,7 @@ import Login from "./Components/Login/Login";
 import Notification from "./Components/Notification/Notification";
 
 function App() {
-  const user = false;
+  const user = true;
   return (
     <div className="mainBody flex justify-center items-center text-white">
       <div className="w-11/12 mx-auto container rounded-lg flex">
