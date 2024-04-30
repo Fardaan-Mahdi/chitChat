@@ -12,6 +12,7 @@ import { auth } from "./lib/firebase";
 
 function App() {
   const currentUser = useSelector((state) => state.user.currentUser);
+  const chatId = useSelector((state) => state.chat.chatId);
   const isLoading = useSelector((state) => state.user.isLoading);
   const dispatch = useDispatch();
 
@@ -42,8 +43,8 @@ function App() {
         {currentUser ? (
           <>
             <List />
-            <Chat />
-            <Detail />
+            {chatId && <Chat />}
+            {chatId && <Detail />}
           </>
         ) : (
           <Login />

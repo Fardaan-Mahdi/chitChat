@@ -2,11 +2,13 @@ import React, { useEffect, useState } from "react";
 import { db } from "../../../lib/firebase";
 import "./ChatList.css";
 import AddUser from "./AddUser/AddUser";
-import { useSelector } from "react-redux";
+import { useSelector,useDispatch } from "react-redux";
 import { onSnapshot, doc ,getDoc } from "firebase/firestore";
+import { changeChat } from "../../../lib/chatStore";
 
 function ChatList() {
   const currentUser = useSelector((state) => state.user.currentUser);
+  const dispatch=useDispatch();
   const [addMode, setaddMode] = useState(false);
   const [chats, setChats] = useState([]);
   useEffect(() => {
@@ -30,6 +32,11 @@ function ChatList() {
       unSub();
     };
   }, [currentUser.id]);
+
+  const handleSelect = async (chat) => {
+    const { chatId, user } = chat;
+    dispatch(changeChat({ chatId, user ,currentUser}));
+  };
 
   console.log(chats);
   return (
@@ -56,6 +63,7 @@ function ChatList() {
         <div
           className="itemInfo flex items-center gap-5 p-5 cursor-pointer"
           key={chat.chatId}
+          onClick={()=>handleSelect(chat)}
         >
           <img src={chat.user.avatar || "./avatar.png"} alt="" />
           <div className="texts flex-col gap-3">
