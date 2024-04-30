@@ -37,6 +37,9 @@
         border-top: 1px solid #dddddd35;
         input{
             background-color: rgba(17,25,40,0.5);
+            &:disabled{
+                cursor:not-allowed;
+            }
         }
         .sendButton{
             background-color: #5183fe;
@@ -45,6 +48,10 @@
             border:none;
             border-radius: 5px;
             cursor: pointer;
+            &:disabled{
+                background-color: #5182feb4;
+                cursor:not-allowed;
+            }
         }
         .emoji{
             position:relative;

@@ -11,6 +11,7 @@ function ChatList() {
   const dispatch = useDispatch();
   const [addMode, setaddMode] = useState(false);
   const [chats, setChats] = useState([]);
+  const [input,setInput]=useState("");
   useEffect(() => {
     const unSub = onSnapshot(
       doc(db, "userChats", currentUser.id),
@@ -54,7 +55,7 @@ function ChatList() {
     }
   };
 
-  console.log(chats);
+  const filteredChats=chats.filter(c=>c.user.username.toLowerCase().includes(input.toLowerCase()))
   return (
     <div className="chatList flex-1 overflow-scroll">
       <div className="search flex items-center gap-2 p-5">
@@ -63,6 +64,7 @@ function ChatList() {
           <input
             type="text"
             placeholder="Search"
+            onChange={(e)=>setInput(e.target.value)}
             className="bg-transparent border-none outline-none text-white w-1/2"
           />
         </div>
@@ -75,7 +77,7 @@ function ChatList() {
           }}
         />
       </div>
-      {chats.map((chat) => (
+      {filteredChats.map((chat) => (
         <div
           className="itemInfo flex items-center gap-5 p-5 cursor-pointer"
           key={chat.chatId}
@@ -84,9 +86,9 @@ function ChatList() {
             backgroundColor: chat?.isSeen ? "transparent" : "#5183fe",
           }}
         >
-          <img src={chat.user.avatar || "./avatar.png"} alt="" />
+          <img src={chat.user.blocked.includes(currentUser.id)?"./avatar.png": chat.user.avatar || './avatar.png'} alt="" />
           <div className="texts flex-col gap-3">
-            <span className="font-medium">{chat.user.username}</span>
+            <span className="font-medium">{chat.user.blocked.includes(currentUser.id)?"User": chat.user.username}</span>
             <p className="font-light text-sm">{chat.lastMessage}</p>
           </div>
         </div>

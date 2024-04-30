@@ -15,6 +15,12 @@ import upload from "../../lib/Upload";
 function Chat() {
   const [chat, setChat] = useState(false);
   const [open, setOpen] = useState(false);
+  const isRecieverBlocked = useSelector(
+    (state) => state.chat.isRecieverBlocked
+  );
+  const isCurrentUserBlocked = useSelector(
+    (state) => state.chat.isCurrentUserBlocked
+  );
   const [text, setText] = useState("");
   const [img, setImg] = useState({
     file: null,
@@ -104,14 +110,14 @@ function Chat() {
       <div className="top p-5 flex items-center justify-between">
         <div className="user flex items-center gap-2">
           <img
-            src="./avatar.png"
+            src={user?.avatar || "./avatar.png"}
             alt=""
             width={60}
             height={60}
             className="rounded-full object-cover"
           />
           <div className="texts">
-            <span className="text-lg font-bold">Fardaan Mahdi</span>
+            <span className="text-lg font-bold">{user?.username}</span>
             <p className="font-light text-sm" style={{ color: "#a5a5a5" }}>
               Lorem ipsum dolor sit amet consectetur adipisicing elit.
             </p>
@@ -194,10 +200,11 @@ function Chat() {
         <input
           type="text"
           value={text}
-          placeholder="Type a message"
+          placeholder={(isCurrentUserBlocked || isRecieverBlocked)?"Cannot send message": "Type a message"}
           onChange={(e) => {
             setText(e.target.value);
           }}
+          disabled={isCurrentUserBlocked || isRecieverBlocked}
           className="flex-1 p-3 rounded-lg text-base border-none outline-none text-white"
         />
         <div className="emoji">
@@ -215,7 +222,7 @@ function Chat() {
             <EmojiPicker open={open} onEmojiClick={handleEmoji} />
           </div>
         </div>
-        <button className="sendButton" onClick={handleSend}>
+        <button className="sendButton" onClick={handleSend} disabled={isCurrentUserBlocked || isRecieverBlocked}>
           Send
         </button>
       </div>
