@@ -13,7 +13,8 @@ const endRef=useRef(null)
 useEffect(()=>{
     endRef.current?.scrollIntoView({behavior:"smooth"})
 },[])
-console.log(text);
+
+
   return (
     <div className='chat flex flex-col'>
         <div className="top p-5 flex items-center justify-between">

@@ -45,7 +45,7 @@ const userSlice = createSlice({
     });
     builder.addCase(fetchUserInfo.fulfilled, (state, action) => {
       state.isLoading = false;
-      state.currentUser = action.payload;
+      state.currentUser = action.payload.currentUser;
     });
   }
 });
