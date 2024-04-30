@@ -64,7 +64,7 @@ function Login() {
     e.preventDefault();
     const formData = new FormData(e.target);
     const { username, email, password } = Object.fromEntries(formData);
-    console.log(username);
+    
 
     try {
       const res = await createUserWithEmailAndPassword(auth, email, password);
