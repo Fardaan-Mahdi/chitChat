@@ -1,14 +1,35 @@
 import React, { useEffect, useState, useRef } from "react";
 import EmojiPicker from "emoji-picker-react";
 import "./Chat.css";
-import { onSnapshot, doc, arrayUnion,updateDoc,getDoc } from "firebase/firestore";
+import {
+  onSnapshot,
+  doc,
+  arrayUnion,
+  updateDoc,
+  getDoc,
+} from "firebase/firestore";
 import { db } from "../../lib/firebase";
 import { useSelector } from "react-redux";
+import upload from "../../lib/Upload";
 
 function Chat() {
   const [chat, setChat] = useState(false);
   const [open, setOpen] = useState(false);
   const [text, setText] = useState("");
+  const [img, setImg] = useState({
+    file: null,
+    url: "",
+  });
+
+  const handleImg = (e) => {
+    if (e.target.files[0]) {
+      setImg({
+        file: e.target.files[0],
+        url: URL.createObjectURL(e.target.files[0]),
+      });
+    }
+  };
+
   const chatId = useSelector((state) => state.chat.chatId);
   const user = useSelector((state) => state.chat.user);
   const currentUser = useSelector((state) => state.user.currentUser);
@@ -32,14 +53,19 @@ function Chat() {
   console.log(chat);
 
   const handleSend = async () => {
-    console.log("clicked");
     if (text === "") return;
+    let imgUrl = null;
     try {
+      if (img.file) {
+        imgUrl = await upload(img.file);
+      }
+
       await updateDoc(doc(db, "chats", chatId), {
         messages: arrayUnion({
           senderId: currentUser.id,
           text,
           createdAt: new Date(),
+          ...(imgUrl && { img: imgUrl }),
         }),
       });
 
@@ -50,20 +76,27 @@ function Chat() {
         if (userChatsSnapshot.exists()) {
           const userChatsData = userChatsSnapshot.data();
 
-          const chatIndex = userChatsData.chats.findIndex((c) => c.chatId === chatId)
+          const chatIndex = userChatsData.chats.findIndex(
+            (c) => c.chatId === chatId
+          );
           userChatsData.chats[chatIndex].lastMessage = text;
-          userChatsData.chats[chatIndex].isSeen = id === currentUser.id ? true : false;
+          userChatsData.chats[chatIndex].isSeen =
+            id === currentUser.id ? true : false;
           userChatsData.chats[chatIndex].updatedAt = Date.now();
-      
+
           await updateDoc(userChatsRef, {
             chats: userChatsData.chats,
           });
         }
       });
-      
     } catch (error) {
       console.log(error);
     }
+    setImg({
+      file: null,
+      url: "",
+    });
+    setText("");
   };
 
   return (
@@ -86,49 +119,62 @@ function Chat() {
         </div>
         <div className="icons flex gap-5">
           <img src="./phone.png" alt="" width={20} height={20} />
+
           <img src="./video.png" alt="" width={20} height={20} />
           <img src="./info.png" alt="" width={20} height={20} />
         </div>
       </div>
 
       <div className="center p-5 flex-1 overflow-scroll flex flex-col gap-6">
-        <div className="message flex gap-5">
-          <img
-            src="./avatar.png"
-            alt=""
-            className="rounded-full object-cover h-8 w-8"
-          />
-          <div className="texts flex-1 flex flex-col gap-1">
-            <p>Lorem ipsum dolor sit amet consectetur adipisicing.</p>
-            <span>1 min ago</span>
-          </div>
-        </div>
         {chat?.messages?.map((message) => (
-  <div className={`message ${message.senderId === currentUser.id ? 'own' : ''} flex gap-5`} key={message.createdAt}>
-    <div className="texts">
-      {message.img && (
-        <img
-          src={message.img}
-          alt=""
-          className="h-80 w-full rounded-lg object-cover"
-        />
-      )}
-      <p>{message.text}</p>
-    </div>
-  </div>
-))}
+          <div
+            className={`message ${message.senderId===currentUser.id ? 'own':''} flex gap-5`}
+            key={message?.createdAt}
+          >
+            <div className="texts">
+              {message.img && (
+                <img
+                  src={message.img}
+                  alt=""
+                  className="h-80 w-full rounded-lg object-cover"
+                />
+              )}
+              <p>{message.text}</p>
+              {/* <span>{message}</span> */}
+            </div>
+          </div>
+        ))}
+        {img.url && <div className={`message own flex gap-5`}>
+          <div className="texts">
+            {img.url && (
+              <img
+                src={img.url}
+                alt=""
+                className="h-80 w-full rounded-lg object-cover"
+              />
+            )}
+          </div>
+        </div>}
 
         <div ref={endRef}></div>
       </div>
 
       <div className="bottom p-5 mt-auto flex items-center justify-between gap-5">
         <div className="icons flex gap-5 ">
-          <img
-            src="./img.png"
-            alt=""
-            width={20}
-            height={20}
-            className="cursor-pointer"
+          <label htmlFor="file">
+            <img
+              src="./img.png"
+              alt=""
+              width={20}
+              height={20}
+              className="cursor-pointer"
+            />
+          </label>
+          <input
+            type="file"
+            id="file"
+            style={{ display: "none" }}
+            onChange={handleImg}
           />
           <img
             src="./camera.png"
