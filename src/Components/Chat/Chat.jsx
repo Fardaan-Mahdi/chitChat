@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import EmojiPicker from "emoji-picker-react";
 import "./Chat.css";
-import { onSnapshot,doc } from "firebase/firestore";
+import { onSnapshot, doc, arrayUnion,updateDoc,getDoc } from "firebase/firestore";
 import { db } from "../../lib/firebase";
 import { useSelector } from "react-redux";
 
@@ -10,6 +10,8 @@ function Chat() {
   const [open, setOpen] = useState(false);
   const [text, setText] = useState("");
   const chatId = useSelector((state) => state.chat.chatId);
+  const user = useSelector((state) => state.chat.user);
+  const currentUser = useSelector((state) => state.user.currentUser);
   const handleEmoji = (e) => {
     setText((prev) => prev + e.emoji);
     setOpen(false);
@@ -19,18 +21,50 @@ function Chat() {
     endRef.current?.scrollIntoView({ behavior: "smooth" });
   }, []);
   useEffect(() => {
-    const unSub = onSnapshot(
-      doc(db, "chats", chatId),
-      (res) => {
-        setChat(res.data());
-      }
-    );
+    const unSub = onSnapshot(doc(db, "chats", chatId), (res) => {
+      setChat(res.data());
+    });
     return () => {
       unSub();
     };
   }, [chatId]);
 
-  console.log(chat)
+  console.log(chat);
+
+  const handleSend = async () => {
+    console.log("clicked");
+    if (text === "") return;
+    try {
+      await updateDoc(doc(db, "chats", chatId), {
+        messages: arrayUnion({
+          senderId: currentUser.id,
+          text,
+          createdAt: new Date(),
+        }),
+      });
+
+      const userIDs = [currentUser.id, user.id];
+      userIDs.forEach(async (id) => {
+        const userChatsRef = doc(db, "userChats", id);
+        const userChatsSnapshot = await getDoc(userChatsRef);
+        if (userChatsSnapshot.exists()) {
+          const userChatsData = userChatsSnapshot.data();
+
+          const chatIndex = userChatsData.chats.findIndex((c) => c.chatId === chatId)
+          userChatsData.chats[chatIndex].lastMessage = text;
+          userChatsData.chats[chatIndex].isSeen = id === currentUser.id ? true : false;
+          userChatsData.chats[chatIndex].updatedAt = Date.now();
+      
+          await updateDoc(userChatsRef, {
+            chats: userChatsData.chats,
+          });
+        }
+      });
+      
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
   return (
     <div className="chat flex flex-col">
@@ -69,39 +103,20 @@ function Chat() {
             <span>1 min ago</span>
           </div>
         </div>
-        <div className="message own flex gap-5">
-          <div className="texts">
-            <img
-              src="./messagePhoto.jpeg"
-              alt=""
-              className="h-80 w-full rounded-lg object-cover"
-            />
-            <p>Lorem ipsum dolor sit amet consectetur adipisicing.</p>
-            <span>1 min ago</span>
-          </div>
-        </div>
-        <div className="message flex gap-5">
-          <img
-            src="./avatar.png"
-            alt=""
-            className="rounded-full object-cover h-8 w-8"
-          />
-          <div className="texts flex-1 flex flex-col gap-1">
-            <p>Lorem ipsum dolor sit amet consectetur adipisicing.</p>
-            <span>1 min ago</span>
-          </div>
-        </div>
-        <div className="message own flex gap-5">
-          <div className="texts">
-            <img
-              src="./messagePhoto.jpeg"
-              alt=""
-              className="h-80 w-full rounded-lg object-cover"
-            />
-            <p>Lorem ipsum dolor sit amet consectetur adipisicing.</p>
-            <span>1 min ago</span>
-          </div>
-        </div>
+        {chat?.messages?.map((message) => (
+  <div className={`message ${message.senderId === currentUser.id ? 'own' : ''} flex gap-5`} key={message.createdAt}>
+    <div className="texts">
+      {message.img && (
+        <img
+          src={message.img}
+          alt=""
+          className="h-80 w-full rounded-lg object-cover"
+        />
+      )}
+      <p>{message.text}</p>
+    </div>
+  </div>
+))}
 
         <div ref={endRef}></div>
       </div>
@@ -154,7 +169,9 @@ function Chat() {
             <EmojiPicker open={open} onEmojiClick={handleEmoji} />
           </div>
         </div>
-        <button className="sendButton">Send</button>
+        <button className="sendButton" onClick={handleSend}>
+          Send
+        </button>
       </div>
     </div>
   );
